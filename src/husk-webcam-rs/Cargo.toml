@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.85"
 description = "Husk Webcam - virtuelt webcam der melder en Husk-telefons kamera til Windows"
+license = "MIT"
 publish = false
 
 # Binaernavnet er HuskWebcam.exe, praecis som C#-udgavens, saa installeren kan pege begge

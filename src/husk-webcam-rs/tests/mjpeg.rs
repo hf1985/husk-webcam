@@ -10,7 +10,7 @@
 //!
 //! ⛔ Benene bruger IKKE en telefon, og det er hele pointen: kaeden skal kunne
 //! maales paa en maskine uden hardware, og en maaling der kraever et menneske med en telefon
-//! kan ikke koere i en uovervaaget runde i en uovervaaget koersel.
+//! kan ikke koere automatisk.
 
 use std::time::{Duration, Instant};
 

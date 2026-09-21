@@ -405,8 +405,8 @@ mod tests {
 
     #[test]
     fn config_ligger_IKKE_i_projektmappen() {
-        // ⛔ Kildetraeet ligger paa Google Drive og synkes i klartekst. En config dér ville
-        // laegge en - ganske vist DPAPI-beskyttet - hemmelighed i skyen.
+        // ⛔ Ligger kildetraeet i en sky-synket mappe, ville en config dér laegge en -
+        // ganske vist DPAPI-beskyttet - hemmelighed i skyen.
         //
         // Benet maaler den RIGTIGE sti, altsaa UDEN miljoevariablen: det er den vej driften
         // bruger, og en maaling af testens egen overstyring ville bevise ingenting.

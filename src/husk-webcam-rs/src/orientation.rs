@@ -81,7 +81,7 @@ pub fn front_rotation_raa(raa: Option<&[Json]>, forrige: i32) -> i32 {
 
 /// Daemper flakken: et skift kraever TO ENS maalinger i traek.
 ///
-/// Port af daempningen i `GravityPoller.run()`. Uden den vipper billedet paa en enkelt
+/// Daempningen er arvet fra den tidligere udgave. Uden den vipper billedet paa en enkelt
 /// stoejmaaling under bevaegelse - og en netvaerksfejl nulstiller kandidaten, saa den naeste
 /// gyldige maaling ikke faar lov at taelle som "den anden ens" sammen med en maaling fra foer
 /// fejlen.

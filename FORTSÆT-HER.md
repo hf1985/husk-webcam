@@ -12,6 +12,25 @@ Her er kun produkt, tests og offentlig dokumentation.
 2. **Kodesignering:** indsendelse til signeringstjeneste er et menneskes opgave og kræver
    byggekæden først. Installeren er usigneret; [README](README.md) forklarer SmartScreen.
 
+## Målte fund der endnu ikke er rettet
+
+En adversarisk gennemgang af hele træet 2026-09-21 fandt fire ting i koden som er efterprøvet
+på disken, men ikke rettet her. Grunden er den samme for dem alle: en rettelse ville ændre
+adfærd, og produktet kunne ikke bygges på den maskine der fandt dem, fordi Smart App Control
+afviste enhver nybygget build-script-binær. En ubygget adfærdsændring hører ikke i et
+udgivet repo.
+
+- **`gui.rs` melder succes på en verifikation der ikke kunne køre.** Doc-kommentaren ved
+  kameraside-skiftet lover at sige det hvis `/flags` ikke kunne læses, men koden returnerer
+  en tom streng når `Forbindelsestjek::ny()` fejler, og UI'et læser tom streng som »intet at
+  melde«. Et uverificeret 200 meldes altså som succes. Fail-open i præcis den vagt
+  kommentaren beskriver.
+- **`demand.rs` henviser til sig selv for et fratræk den ikke laver.** Fratrækket af appens
+  eget handle sker i `gui.rs::opdater_efterspoergsel`, ikke i `DemandMonitor`.
+- **`json.rs` siger »under 300 linjer« om en fil på omkring 329 kodelinjer.**
+- **`unity_sender.rs` skriver »de 17 tegn«** om et præfiks-loft der kun gælder
+  `UnityCapture`-præfikset; projektets eget giver 15.
+
 ## Uafklaret testdækning
 
 `src/husk-webcam-rs/build.rs` har ingen automatisk test af sky-disk-vagten. Et rigtigt build

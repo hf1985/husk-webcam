@@ -236,7 +236,7 @@ impl Default for DemandMonitor {
     }
 }
 
-/// Praecis ÉN sender pr. Windows-session. Port af `singleton()` i `unity_demand.py`.
+/// Praecis ÉN sender pr. Windows-session.
 ///
 /// To sendere paa samme enhed ville skiftes til at overskrive hinandens frames, og billedet
 /// ville se ud som om det flimrede mellem to kilder.

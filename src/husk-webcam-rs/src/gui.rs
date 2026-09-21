@@ -1354,9 +1354,15 @@ unsafe fn opdater_efterspoergsel(app: &mut App) {
             None => format!("{} modtager(e)", app.demand.sidste_modtagere()),
         };
         let tekst = if app.koerer {
+            // ⛔ »preview taeller med« er BETINGET: `preview_aabent` saettes ovenfor til
+            // »vinduet er i forgrunden OG synligt«, og `DemandMonitor::tick` taeller det kun
+            // med naar flaget staar. I den almindelige drift - appen i bakken, modtageren i
+            // forgrunden - staar det IKKE, saa en ubetinget tekst ville sige det modsatte af
+            // hvad der sker.
             format!(
-                "Sender: {} · {m} · preview tæller med",
-                if app.demand.leverer() { "ja" } else { "nej" }
+                "Sender: {} · {m}{}",
+                if app.demand.leverer() { "ja" } else { "nej" },
+                if app.demand.preview_aabent { " · preview tæller med" } else { "" }
             )
         } else {
             format!("Stoppet · {m}")

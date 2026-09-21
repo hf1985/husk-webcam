@@ -21,9 +21,16 @@ git grep -nFi "$env:USERNAME"
 
 ## Regler
 
-- Versionen bor kun i `src/husk-webcam-rs/Cargo.toml`; hardkod den ikke andre steder.
-  `scripts/byg-installer.ps1` læser den derfra.
-- Bevar Unity Captures ophavsretsnotitser og MIT-licens i `src/HuskFilter/`.
+- Versionen bor i `src/husk-webcam-rs/Cargo.toml`; `scripts/byg-installer.ps1` og
+  `installer/husk-webcam.nsi` læser den derfra. ⚠️ **Der er ÉN kilde mere, og den er manuel:**
+  `src/husk-webcam-rs/res/husk.rc` hardkoder `FILEVERSION`/`PRODUCTVERSION` og de to
+  `"0.1.0.0"`-strenge, og `build.rs` kalder bare `rc.exe` på filen uden at substituere noget.
+  Bumper du `Cargo.toml` uden at rette `.rc`-filen, hedder installeren det nye nummer mens
+  exe'ens egenskabsdialog viser det gamle. Ret begge, eller lad `build.rs` generere blokken
+  af `CARGO_PKG_VERSION`.
+- Bevar ophavsretsnotitserne i `src/HuskFilter/`. To tredjeparter bor der: Unity Capture (MIT)
+  og Microsofts DirectShow-baseklasser i `streams.h`/`streams.cpp`, som IKKE er dækket af
+  projektets MIT-licens. Se [LICENSE](LICENSE).
 - `.ps1` er ren ASCII: skriv `ae`/`oe`/`aa`, da Windows-konsollen kan fejlvise æ/ø/å.
   Undtagelse: `src/HuskFilter/byg.ps1` har
   UTF-8-BOM og må bruge æ/ø/å. `installer/husk-webcam.nsi` **skal bevare sin UTF-8-BOM**.

@@ -21,19 +21,53 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+===============================================================================
+THIRD-PARTY COMPONENTS
+===============================================================================
+
+The MIT grant above covers the code written for this project. It does NOT
+cover the two vendored components below, which keep their own copyright and
+terms. Both live under src/HuskFilter/ and both arrived through Unity Capture,
+which vendors them the same way.
+
 -------------------------------------------------------------------------------
-Third-party components
+1. Unity Capture -- src/HuskFilter/HuskFilter.cpp, HuskFilter.def, shared.inl
 -------------------------------------------------------------------------------
 
-src/HuskFilter/
     Unity Capture
     Copyright (c) 2018 Bernhard Schelling
     Based on UnityCam, Copyright (c) 2016 MHD Yamen Saraiji
     The MIT License (MIT)
     https://github.com/schellingb/UnityCapture
 
-    Vendored with one change: the four shared kernel objects carry Husk names
-    instead of UnityCapture names, so an unmodified Unity Capture can run
-    alongside without the two reaching each other's clients. The original
-    copyright and licence notices in those files are kept verbatim and must
-    not be removed or rewritten.
+The full notice is reproduced verbatim at the top of each of those files and
+must not be removed or rewritten.
+
+Vendored with three changes, all of them naming, all of them so that this
+filter and an unmodified Unity Capture can be installed side by side without
+reaching each other's clients:
+
+    1. the capture device name       (HuskFilter.cpp)
+    2. the four CLSIDs               (HuskFilter.cpp)
+    3. the four shared kernel object names -- mutex, two events and the file
+       mapping                       (shared.inl)
+
+Change 2 without change 3 would be half a rebranding: two filters with
+separate COM registrations still sharing one piece of memory.
+
+-------------------------------------------------------------------------------
+2. Microsoft DirectShow base classes -- src/HuskFilter/streams.h, streams.cpp
+-------------------------------------------------------------------------------
+
+    Copyright (c) 1992-2001 Microsoft Corporation.  All rights reserved.
+
+These two files are Microsoft's DirectShow base classes (the BaseClasses
+sample that ships with the Windows SDK). streams.cpp is an amalgamation of 21
+of the individual BaseClasses source files, each still carrying its own
+"// File:" banner and Microsoft copyright notice; there are 28 such notices
+across the two files. Together they are 17,603 of the 19,230 lines under
+src/HuskFilter/.
+
+They are used unmodified, they are NOT licensed under the MIT grant above, and
+they remain subject to the terms under which Microsoft distributes the Windows
+SDK samples. The copyright notices inside them must not be removed.

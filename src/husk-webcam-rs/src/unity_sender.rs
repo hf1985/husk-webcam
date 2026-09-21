@@ -81,7 +81,8 @@ pub const MAX_CAP_NUM: i32 = (b'z' - b'0') as i32;
 pub const INGEN_MODTAGER_FORKLARING: &str = concat!(
     "Kamera-filteret svarer ikke. Enten er 'Husk Webcam' ikke registreret paa denne PC, ",
     "eller ogsaa er der ingen app der bruger kameraet lige nu (filteret opretter foerst sin ",
-    "delte hukommelse naar en modtager aabner enheden). Registrering: se docs/byg-fra-kilde.md."
+    "delte hukommelse naar en modtager aabner enheden). Installeren registrerer filteret; "
+    "kom appen uden om den, saa se https://xplat.co/husk."
 );
 
 // Adgangsrettigheder, skrevet ud frem for hentet fra et feature-gated modul.
@@ -565,6 +566,6 @@ mod tests {
     fn forklaringen_navngiver_baade_aarsag_og_kur() {
         // Skriver IKKE "ukendt fejl".
         assert!(INGEN_MODTAGER_FORKLARING.contains("Husk Webcam"));
-        assert!(INGEN_MODTAGER_FORKLARING.contains("docs/byg-fra-kilde.md"));
+        assert!(INGEN_MODTAGER_FORKLARING.contains("https://xplat.co/husk"));
     }
 }

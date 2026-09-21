@@ -136,7 +136,7 @@ pub fn kod_png(bm: &Bitmap32) -> windows::core::Result<Vec<u8>> {
 ///
 /// ⛔ Her stod indtil 2026-09-20 et enkelt `remove_file` paa SUCCES-stien alene, saa hvert
 /// eneste fejlende WIC-kald efterlod en temp-fil. De ligner ikke skade og bliver derfor ikke
-/// ryddet af nogen - samme klasse som de 223 efterladte filer maaleregel 441 taeller.
+/// ryddet af nogen - samme klasse som et redirect der lander et uventet sted.
 struct MidlertidigFil(std::path::PathBuf);
 
 impl Drop for MidlertidigFil {
@@ -201,7 +201,7 @@ fn kod_billede(bm: &Bitmap32, container: &windows::core::GUID) -> windows::core:
     }
 }
 
-/// Aabn et WIC-stream over en FIL og afkod den. Bruges af maalings-tilstandene.
+/// Laes en FIL helt ind i hukommelsen og afkod den som JPEG. Bruges af maalings-tilstandene.
 pub fn afkod_jpeg_fil(sti: &std::path::Path) -> Option<Bitmap32> {
     let data = std::fs::read(sti).ok()?;
     afkod_jpeg(&data)

@@ -3,7 +3,7 @@
 //! Solo = den valgte feed letterboxet ind i hele rammen (ren feed, ingen etiket - den gaar
 //! direkte til moedeappen). Grid = alle kilder med auto-kolonner og etiket pr. celle.
 //!
-//! En kilde uden billede giver et SORT felt med tekst, aldrig en frossen gammel frame. En
+//! En kilde uden billede giver et naesten sort felt med tekst, aldrig en frossen gammel frame. En
 //! frossen frame er den vaerste af de tre udfald: den ser levende ud.
 
 use crate::bitmap::Bitmap32;

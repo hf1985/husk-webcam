@@ -1,6 +1,6 @@
 //! HTTP over WinHTTP - Windows' egen HTTP-klient.
 //!
-//! ⛔ DETTE SPOR ER DEN ENKELTBESLUTNING DER FLYTTER MEST PAA STOERRELSEN.
+//! ⛔ DETTE VALG FLYTTER MEST PAA STOERRELSEN AF DEN UDGIVNE BINAER.
 //!
 //! Appens netvaerksbehov er ÉN chunked HTTP GET mod telefonen, plus fire smaa GET'er til
 //! `/healthz`, `/flags`, `/sensor` og `/set`. En fuld HTTP-stak i pakken (TLS, HTTP/2,

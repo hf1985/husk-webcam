@@ -15,27 +15,37 @@ Husk på telefonen -- MJPEG/HTTP --> HuskWebcam.exe --> HuskWebcamFilter{32,64}.
 
 ## Valg der skal bevares
 
-**Windows leverer funktionerne.** Eneste eksterne afhængighed er Microsofts `windows`-bindinger:
+**Windows leverer funktionerne.** Eneste DIREKTE afhængighed er Microsofts `windows`-bindinger:
 WIC afkoder JPEG, WinHTTP henter HTTP, GDI tegner og DPAPI krypterer. JSON og MJPEG parses i
-huset. Det holder appen under en halv megabyte uden medpakket runtime; begrundelsen står
-også i `Cargo.toml`.
+projektet selv. Det holder appen under en halv megabyte uden medpakket runtime; begrundelsen
+står også i `Cargo.toml`. (`Cargo.lock` har 14 pakker i alt: `windows`-familien plus de fire
+proc-makro-afhængigheder den selv trækker ind.)
 
-**Filterets eneste ændring fra Unity Capture er Husk-navne på de fire delte kerneobjekter:**
-mutex, events og mapping. En egen CLSID isolerer kun COM-registreringen; fælles objektnavne
-ville sende frames til hinandens klienter og ligne billedflimmer. Ophavsret og MIT-licens
-bevares uændret.
+**Filteret er ændret tre steder i forhold til Unity Capture**, alle tre navngivning:
+enhedens navn og de fire CLSID'er i `HuskFilter.cpp`, og de fire delte kerneobjekter i
+`shared.inl`. En egen CLSID isolerer kun COM-registreringen; delte de to filtre stadig mutex,
+events og mapping, ville de sende frames til hinandens klienter og ligne billedflimmer.
+Ophavsret og licenser bevares uændret; se [LICENSE](LICENSE), som også dækker Microsofts
+DirectShow-baseklasser i `streams.h` og `streams.cpp`.
 
 **Afinstallér efter pakkelisten.** `byg-installer.ps1` genererer én `Delete` pr. pakket fil
 og én `RMDir` pr. mappe i omvendt dybde-orden fra samme filer som `File /r` pakker.
 `RMDir /r "$INSTDIR"` har målbart slettet brugerens egne filer og må ikke erstatte listen.
+⚠️ De tre navne der IKKE kommer fra pakkelisten – begge filter-DLL'er og `Uninstall.exe` –
+står hardkodet både i `byg-installer.ps1` og i `husk-webcam.nsi`. Netop de tre KAN drive fra
+hinanden; ændrer du et af dem, så ret begge steder.
 
 **Bevar konfigurationsmappen `husk-viewer`.** Navnet er arvet; omdøbning taber eksisterende
 brugeres opsætning og token. Versionskilden og øvrige redigeringsregler står i [CLAUDE.md](CLAUDE.md).
 
 ## Ældre kildekommentarer
 
-»C#-udgaven« er den tidligere .NET-implementering, som ikke er i repoet. Henvisninger forklarer
-bevidst kompatibilitet. »måleregel N« er et internt arkivnummer; sætningen foran bærer selve
-reglen, så ingen ekstern kilde er nødvendig.
+Tre slags henvisninger i koden peger på ting der ikke er i repoet, og det er med vilje:
+
+- **»C#-udgaven«** er den tidligere .NET-implementering. Henvisninger til den forklarer
+  hvorfor et feltnavn, en værdi eller en adfærd er bevaret frem for forbedret.
+- **»Python-vejen«, »Python-udgaven«** er implementeringen før den igen. Samme rolle.
+- **»måleregel N«** er et internt arkivnummer. Sætningen foran nummeret bærer selve reglen,
+  så ingen ekstern kilde er nødvendig for at forstå den.
 
 Status for CI og signering: [FORTSÆT-HER.md](FORTSÆT-HER.md).

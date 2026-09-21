@@ -1,13 +1,13 @@
 # Byg Rust-udgaven af Husk Webcam, og PROEV artefaktet bagefter.
 #
-# !! BYGGETRAEET LIGGER UDEN FOR DRIVE. Kilden bor paa Google Drive, men Drive-syncen
-#    korrumperer hoej-churn-skrivninger, og en .gitignore stopper git - ikke syncen.
+# !! BYGGETRAEET HOERER UDEN FOR EN SKY-MAPPE. Ligger kilden i en Google Drive-montering,
+#    korrumperer syncen hoej-churn-skrivninger, og en .gitignore stopper git - ikke syncen.
 #    Kuren er CARGO_TARGET_DIR, og
 #    crate'ens build.rs NAEGTER at bygge uden den. Vagten er fail-closed med vilje.
 #
-# !! ET GROENT BUILD ER IKKE ET KOERBART PROGRAM. Smart App Control staar i HAANDHAEVELSE paa
-#    denne maskine (VerifiedAndReputablePolicyState = 1), og den blokerer nogle nybyggede,
-#    usignerede binaerer med "An Application Control policy has blocked this file".
+# !! ET GROENT BUILD ER IKKE ET KOERBART PROGRAM. Staar Smart App Control i HAANDHAEVELSE
+#    (VerifiedAndReputablePolicyState = 1), blokerer den nogle nybyggede, usignerede
+#    binaerer med "An Application Control policy has blocked this file".
 #    Dommen er INDHOLDS-afhaengig og uforudsigelig: samme kode bygget to gange gav to
 #    forskellige SHA256'er, og kun den ene blev blokeret (maalt 2026-09-20).
 #    Derfor PROEVER scriptet exe'en frem for at slaa den op (maaleregel 317).

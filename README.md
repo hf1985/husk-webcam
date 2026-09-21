@@ -46,7 +46,8 @@ i repoet.
    - **Telefonens adresse** – Husk viser den i appens egen statusvisning.
    - **Token** – kun hvis du har slået et til på telefonen. Det gemmes beskyttet med Windows'
      egen brugerkryptering, men det beskytter ikke selve forbindelsen.
-   - **Grundrotation**, tyngdesensor og forsidekamera efter behov.
+   - **Grundrotation** og tyngdesensor efter behov. **Forsidekameraet kræver Husk 1.1** på
+     telefonen.
 3. Vælg **Husk Webcam** som kamera i det program du skal bruge.
 
 Appen kan køre som et vindue eller som et bakke-ikon. Autostart-genvejen starter den i bakken.

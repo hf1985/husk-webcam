@@ -30,10 +30,10 @@
     <application>
       <!--
         Windows 10 og 11.
-        ⛔ Det er IKKE arvet fra C#-udgavens ".NET naar ikke laengere ned" - den begrundelse
-        faldt bort med runtimen. Gulvet er nu Tailscale, som kraever Windows 10+ (v1.44.3 var
-        sidste udgave med Windows 7), og uden Tailscale eller et LAN kan PC'en ikke naa
-        telefonen overhovedet. Se "Windows XP: afvist" i FORTSAET-HER.md.
+        Gulvet foelger det appen faktisk bruger: WIC, WinHTTP, DPAPI og de moderne
+        common controls. Et aeldre Windows ville desuden ikke kunne koere Tailscale
+        (v1.44.3 var sidste udgave med Windows 7), som er den ene af de to veje til
+        telefonen; den anden er et almindeligt LAN.
       -->
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
     </application>
