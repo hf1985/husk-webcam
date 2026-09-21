@@ -81,7 +81,7 @@ pub const MAX_CAP_NUM: i32 = (b'z' - b'0') as i32;
 pub const INGEN_MODTAGER_FORKLARING: &str = concat!(
     "Kamera-filteret svarer ikke. Enten er 'Husk Webcam' ikke registreret paa denne PC, ",
     "eller ogsaa er der ingen app der bruger kameraet lige nu (filteret opretter foerst sin ",
-    "delte hukommelse naar en modtager aabner enheden). Installeren registrerer filteret; "
+    "delte hukommelse naar en modtager aabner enheden). Installeren registrerer filteret; ",
     "kom appen uden om den, saa se https://xplat.co/husk."
 );
 

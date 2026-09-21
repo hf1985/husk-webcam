@@ -42,6 +42,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: NSIS
+        shell: pwsh
+        run: |
+          # ⛔ NSIS ligger IKKE i runner-billedet. Målt 2026-09-21 på `windows-2025`:
+          #    `C:\Program Files (x86)\NSIS\makensis.exe` findes ikke, og trin 3 kan derfor
+          #    ikke køre. Kæden installerer den selv frem for at arve den fra et billede der
+          #    kan ændre sig under den.
+          #
+          #    Versionen pinnes ikke, men SKRIVES NED i inventarlisten nedenfor. En pinning
+          #    der ikke længere kan hentes, ville stoppe kæden helt; et nummer i loggen er
+          #    nok til at kunne gentage et build bagefter.
+          $kandidater = @(
+            (Join-Path $env:LOCALAPPDATA 'Programs\NSIS\makensis.exe'),
+            (Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'),
+            (Join-Path $env:ProgramFiles 'NSIS\makensis.exe')
+          )
+          if ($kandidater | Where-Object { Test-Path $_ }) {
+            Write-Output 'makensis.exe findes allerede i runner-billedet.'
+          } else {
+            choco install nsis --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "choco install nsis gav exit $LASTEXITCODE" }
+          }
+          $fundet = $kandidater | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $fundet) { throw ("makensis.exe findes stadig ikke. Proevede:`n  " + ($kandidater -join "`n  ")) }
+          Write-Output "makensis: $fundet"
+          exit 0
+
       - name: Værktøjs-inventar
         shell: pwsh
         run: |
@@ -152,7 +179,10 @@ jobs:
             ${{ runner.temp }}/udgivelse/HuskWebcamFilter32.dll
 
       - name: Gem artefakterne
-        if: always()
+        # Kun naar der ER noget at gemme. Et `always()` uden den betingelse gav et EKSTRA
+        # roedt trin naar kaeden allerede var faldet tidligere, og det skjuler den foerste
+        # fejl bag en anden.
+        if: always() && steps.saml.conclusion == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: husk-webcam-${{ steps.saml.outputs.version }}-${{ github.sha }}

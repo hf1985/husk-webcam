@@ -35,8 +35,15 @@ Klik **Flere oplysninger** og derefter **Kør alligevel**. Advarslen betyder ikk
 fundet noget galt – den betyder at filen ikke er set før og ikke er signeret. Uden den
 besked ville mange tro at produktet er i stykker; det er det ikke.
 
-Vil du selv kontrollere filen, står dens SHA256 på udgivelsen, og hele kildekoden ligger her
-i repoet.
+Vil du selv kontrollere filen, står dens SHA256 på udgivelsen, og hele kildekoden ligger her i repoet.
+Udgivelser bygget af den offentlige byggekæde bærer desuden en **herkomst-attest**, så du kan efterprøve at filen kom fra netop den kildekode – uden at tage vores ord for det:
+
+```powershell
+gh attestation verify .\HuskWebcam-<version>-setup.exe --repo (gh repo view --json nameWithOwner -q .nameWithOwner)
+```
+
+Kommandoen køres fra en klon af repoet; [byggevejledningen](docs/byg-fra-kilde.md) forklarer kæden.
+⚠️ `v0.1.0` er bygget i hånden og har ingen attest – den kom før kæden.
 
 ## Sådan bruges den
 

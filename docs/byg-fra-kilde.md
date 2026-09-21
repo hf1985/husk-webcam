@@ -79,7 +79,35 @@ Resultatet kontrolleres og størrelsen i bytes udskrives:
 ødelægger danske bogstaver og melder alligevel exit 0. Scriptet afviser en compilerlog
 der ikke bekræfter UTF-8.
 
+## Den offentlige byggekæde
+
+De samme tre trin kører automatisk i `.github/workflows/byg.yml` ved hvert push til `main`, ved hver pull request, ved et tag på formen `v*` og på et manuelt kald.
+Kæden kalder præcis de scripts der står ovenfor, i den rækkefølge.
+Der er med vilje ingen parallel byggeopskrift i den: en kæde der byggede anderledes end denne vejledning, ville dokumentere noget andet end det du selv kan bygge.
+
+Kæden er grunden til at du ikke behøver tro på os.
+Den kører i et miljø hvis log alle kan læse, og den lægger en **herkomst-attest** (build provenance) på installeren, appens exe og begge filter-DLL'er.
+Attesten binder hver fil til den commit og den workflow-kørsel der lavede den, og den kan efterprøves fra en klon:
+
+```powershell
+gh attestation verify .\HuskWebcam-<version>-setup.exe --repo (gh repo view --json nameWithOwner -q .nameWithOwner)
+```
+
+Ud over de tre byggetrin kører kæden fire ting der ikke kan køres meningsfuldt i hånden hver gang:
+
+- **Scrub-gaten** (`scripts/scrub-tjek.ps1`) på hvert eneste push, så et offentligt repo ikke kan komme til at bære noget privat.
+- **Versions-gaten** (`scripts/tjek-version.ps1`), fordi versionen har to kilder og kun den ene er automatisk. Se [CLAUDE.md](../CLAUDE.md) og gatens egen hovedkommentar.
+- **Rust-suiten**, som en udviklermaskine med Smart App Control i håndhævelse ikke kan køre: testbinærerne blokeres.
+- **Sky-drev-vagten i `build.rs`** (`scripts/proev-skyvagt.ps1`), i begge retninger, mod en falsk Drive-montering. Vagten er betinget, så en almindelig lokal klon aktiverer den slet ikke.
+
+⚠️ **Kæden falder ikke tilbage til et frisk byggetræ.** Den kalder `byg-rust.ps1` med `-Forsoeg 1`.
+Fallback'en findes for Smart App Control, og en runner har ikke SAC i håndhævelse; dér ville et fald tilbage skjule en ægte fejl frem for at afsløre den.
+
+Skubber du et tag `vX.Y.Z`, kræver versions-gaten at taggen, `Cargo.toml` og `res/husk.rc` er enige, og kørslen lægger artefakterne op som en udgivelse med SHA256 og attest-vejledning i noterne.
+Bump derfor versionen **før** du sætter taggen.
+
 ## Kodesignering
 
-Installeren er usigneret og udløser SmartScreen. Signering skal ske i en offentlig byggekæde
-med dokumenteret forbindelse til kilden; se [næste arbejde](../FORTSÆT-HER.md).
+Installeren er usigneret og udløser SmartScreen.
+Byggekæden ovenfor er på plads, så forbindelsen fra binær til kilde nu er dokumenteret og efterprøvelig.
+Selve indsendelsen til en signeringstjeneste er et menneskes opgave; se [næste arbejde](../FORTSÆT-HER.md).
