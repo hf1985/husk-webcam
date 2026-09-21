@@ -1,0 +1,28 @@
+# Secrets. Intet hemmeligt hoerer i dette repo.
+.env
+.secrets/
+*.key
+*.pfx
+*.snk
+
+# Lokal konfiguration. Appens config.json bor i %LOCALAPPDATA%\husk-viewer, ikke her, men
+# en haandkoert kopi i traeet maa aldrig committes: den baerer telefonens adresse og token.
+config.json
+
+# Koerselsartefakter
+*.log
+
+# Byggeartefakter.
+#
+# ⛔ target/ er en EKSTRA spaerre, ikke kuren. Ligger kilden i en sky-synket mappe,
+#    korrumperer syncen de hoej-churn-skrivninger et build laver, og .gitignore stopper git -
+#    ikke syncen. Kuren er CARGO_TARGET_DIR paa lokal disk, og crate'ens build.rs NAEGTER at
+#    bygge uden den naar kilden ligger paa Drive. Se docs/byg-fra-kilde.md.
+target/
+*.obj
+*.exp
+*.lib
+*.pdb
+
+# ⛔ Cargo.lock er IKKE ignoreret, og det er med vilje: det her er en BINAER, ikke et
+#    bibliotek, og en pinnet afhaengighedsgraf er en del af det der udgives.

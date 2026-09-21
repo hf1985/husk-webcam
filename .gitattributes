@@ -1,0 +1,29 @@
+* text=auto eol=lf
+
+# Windows-native scripts: behold CRLF
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.psd1  text eol=crlf
+*.vbs   text eol=crlf
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+
+# Binærer
+*.exe   binary
+*.dll   binary
+*.so    binary
+*.dylib binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.pdf   binary
+*.zip   binary
+*.tar   binary
+*.gz    binary
+*.chm   binary
+*.sqlite3 binary

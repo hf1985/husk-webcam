@@ -1,0 +1,44 @@
+// Ressourcer til HuskWebcam.exe: ikon, manifest og versionsblok.
+//
+// ⛔ Filen bruger RAA numeriske ressourcetyper og INGEN #include. rc.exe kan ikke finde
+//    windows.h uden at hele MSVC-miljoeet er sat op (vcvarsall), og build.rs kalder rc.exe
+//    direkte. De to tal der skal kendes er derfor skrevet ud:
+//      1  = CREATEPROCESS_MANIFEST_RESOURCE_ID
+//      24 = RT_MANIFEST
+//
+// Sproget er dansk (0x406) med Unicode-kodeside (1200), altsaa blok "040604B0".
+// ⛔ Strengene selv holdes i ASCII. Et maskinlaest maerke der krydser en proces-graense maa
+//    ikke baere et dansk bogstav, og en .rc-fil laeses af rc.exe med en kodeside vi ikke
+//    kontrollerer.
+
+1 ICON "husk.ico"
+
+1 24 "app.manifest"
+
+1 VERSIONINFO
+FILEVERSION 0,1,0,0
+PRODUCTVERSION 0,1,0,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0x0L
+FILEOS 0x40004L
+FILETYPE 0x1L
+FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040604B0"
+        BEGIN
+            VALUE "CompanyName", "Husk"
+            VALUE "FileDescription", "Husk Webcam - virtuelt webcam fra en Husk-telefon"
+            VALUE "FileVersion", "0.1.0.0"
+            VALUE "InternalName", "HuskWebcam"
+            VALUE "OriginalFilename", "HuskWebcam.exe"
+            VALUE "ProductName", "Husk Webcam"
+            VALUE "ProductVersion", "0.1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x406, 1200
+    END
+END

@@ -1,0 +1,21 @@
+# Statisk CRT: uden den importerer binaeren VCRUNTIME140.dll, som er VC++ Redistributable
+# og IKKE en inbox-komponent i Windows.
+#
+# Hvorfor det betyder noget her: produktloeftet er "brugeren skal ikke installere noget".
+# Maalt 2026-09-20 paa en Windows 11-maskine mod den binaer installeren pakkede: importlisten bar
+# VCRUNTIME140.dll plus seks api-ms-win-crt-*-api-saet. Med +crt-static er begge dele VAEK,
+# og de tilbagevaerende imports er alle inbox (kernel32, ntdll, user32, gdi32, ole32,
+# oleaut32, shell32, crypt32, winhttp, bcryptprimitives, dbghelp).
+#
+# Prisen er maalt, ikke gaettet: 352.768 -> 451.072 bytes (+98.304, +28 %). Hele suiten
+# koerte groen med flaget (234 bestaaet, 0 fejlet), og --vindue-roegtjek gav 23 kontroller
+# og 50 forskellige farver som foer.
+#
+# !! CARGO LAESER DENNE FIL UD FRA ARBEJDSMAPPEN, IKKE UD FRA --manifest-path.
+#    Et kald som `cargo build --manifest-path <crate>\Cargo.toml` fra en ANDEN mappe laeser
+#    den altsaa ALDRIG, og flaget bliver en tavs no-op. Derfor skifter scripts\byg-rust.ps1
+#    til crate-mappen foer den kalder cargo - OG maaler bagefter at VCRUNTIME140.dll faktisk
+#    er vaek af den byggede binaer. Erklaeringen alene er ikke et bevis (maaleregel 134).
+
+[build]
+rustflags = ["-C", "target-feature=+crt-static"]

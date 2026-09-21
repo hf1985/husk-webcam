@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+
+  <!--
+    Den ALMINDELIGE brug maa IKKE kraeve administrator. Kun installationen forhoejer, og kun
+    én gang, fordi kamera-filteret registreres i HKLM. Koerer appen selv eleveret, havner
+    brugerens config, token og autostart under administratorens konto - og brugeren finder dem
+    aldrig igen.
+  -->
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+      <!--
+        UTF-8 som proces-kodeside. Uden den laeser Windows' ANSI-flade cp1252, og de faa
+        steder hvor en A-variant slipper igennem ville tabe ae/oe/aa tavst.
+      -->
+      <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
+    </windowsSettings>
+  </application>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!--
+        Windows 10 og 11.
+        ⛔ Det er IKKE arvet fra C#-udgavens ".NET naar ikke laengere ned" - den begrundelse
+        faldt bort med runtimen. Gulvet er nu Tailscale, som kraever Windows 10+ (v1.44.3 var
+        sidste udgave med Windows 7), og uden Tailscale eller et LAN kan PC'en ikke naa
+        telefonen overhovedet. Se "Windows XP: afvist" i FORTSAET-HER.md.
+      -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+
+  <!--
+    Common Controls 6: uden den tegner Windows knapper, lister og felter i Windows 95-stil.
+    C#-udgaven fik det gratis fra WPF; en ren Win32-app skal bede om det selv.
+  -->
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="*"
+        publicKeyToken="6595b64144ccf1df"
+        language="*" />
+    </dependentAssembly>
+  </dependency>
+
+</assembly>

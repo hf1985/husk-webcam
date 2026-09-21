@@ -1,0 +1,58 @@
+[package]
+name = "husk-webcam"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "Husk Webcam - virtuelt webcam der melder en Husk-telefons kamera til Windows"
+publish = false
+
+# Binaernavnet er HuskWebcam.exe, praecis som C#-udgavens, saa installeren kan pege begge
+# veje uden at kende sproget.
+[[bin]]
+name = "HuskWebcam"
+path = "src/main.rs"
+
+[lib]
+name = "husk_webcam"
+path = "src/lib.rs"
+
+[dependencies]
+# ⛔ DEN ENESTE afhaengighed, og den er bevidst valgt.
+#
+# `windows` er Microsofts egne bindinger til Windows' eget API. Den er ikke et rammevaerk der
+# laegger noget nyt i pakken: hvert kald gaar til en DLL der allerede ligger paa maskinen
+# (user32, gdi32, windowscodecs, winhttp, crypt32). Det er hele grunden til at omskrivningen
+# kan komme af med de 170,9 MB runtime - ikke at Rust er lille, men at Windows allerede er der.
+#
+# Alt andet er skrevet i huset: JSON-laeseren, MJPEG-parseren, HTTP-klienten (WinHTTP) og
+# JPEG-afkodningen (WIC). En billedpakke eller en HTTP-stak ville give de MB tilbage under et
+# andet navn - det var netop grunden til at OpenCV blev fravalgt i Python-vejen.
+[dependencies.windows]
+version = "0.62"
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Imaging",
+    "Win32_Networking_WinHttp",
+    "Win32_Security_Cryptography",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Console",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_Threading",
+    "Win32_System_Variant",
+    "Win32_UI_Controls",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+]
+
+# ⛔ Release-profilen er en del af produktet, ikke en smagssag: den er halvdelen af grunden
+#    til at pakken kan blive 10-15 MB i stedet for 51,2 MB.
+[profile.release]
+panic = "abort"      # ingen unwind-tabeller
+lto = true           # link-time optimering paa tvaers af crates
+opt-level = "z"      # optimér for stoerrelse
+strip = true         # ingen symboler i den udgivne binaer
+codegen-units = 1    # én enhed giver LTO mest at arbejde med
