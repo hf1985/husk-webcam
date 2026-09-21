@@ -49,6 +49,7 @@ Det er **ikke** den rene VM-prøve punkt 2 nedenfor efterlyser – maskinen havd
 - **Uden modtager** svarer senderen `ingen-modtager` for hver frame og exit 5 med hele `INGEN_MODTAGER_FORKLARING` – altså netop den streng der ikke kunne kompilere for en time siden.
 - **Afinstallation, målt med kanariefiler:** to fremmede filer blev lagt i app-mappen før `Uninstall.exe /S`. Bagefter var produktets egne fire filer, begge CLSID-registreringer, afinstallations-nøglen og begge genveje væk, mens **begge kanarier og mappen selv stod tilbage**. `.nsi`-filens begrundelse for at afvise `RMDir /r` holder altså på den færdige installer, ikke kun på proben. Maskinen er geninstalleret bagefter.
 - **Smart App Control blokerede hverken installeren eller appen**, selv om den står i håndhævelse på maskinen og afviser nybyggede binærer dér. Maskinen kan altså køre produktet fra kæden, men ikke bygge det selv.
+- **Med en rigtig telefon:** `--maal-stroem` mod en Husk-telefon på et privat net gav `frames=10 status=Live afkodet=1280x720`, og efter ét `Start kamera` leverede kameraet levende 1920x1080-billeder til en fremmed modtager. Opsætningen blev skrevet som `config.json` med tokenet DPAPI-beskyttet under entropien i `secret.rs`, og appen læste den. Hele vejen fra telefon til kameraenhed er altså målt, ikke arvet.
 
 ⚠️ **VLC viser billedet forkert, og det er VLC's fejl – ikke produktets.**
 I VLC 3.0.23 kommer billedet lodret vendt og med rød og blå byttet. `ffmpeg` på samme kamera og samme frames viser det **rigtigt**: rød, grøn foroven og blå, hvid forneden, præcis som `main.rs::testmoenster` skriver det.
@@ -60,6 +61,23 @@ Det er værd at have i baghovedet, fordi VLC er det første en nysgerrig bruger 
 1. **Skær en udgivelse med kæden.** Bump versionen i `Cargo.toml` **og** `res/husk.rc` (versions-gaten måler begge), sæt taggen, og lad kørslen udgive. Det giver den første installer hvis forbindelse til kilden kan efterprøves udefra.
 2. **Kodesignering.** Et menneskes opgave: indsendelse til en signeringstjeneste. Byggekæden, som var forudsætningen, er nu på plads. Installeren er indtil da usigneret, og [README](README.md) forklarer SmartScreen.
 3. **De fire målte fund nedenfor.** Grunden til at de stod urørte er væk.
+
+## ⛔ Appen begynder ikke at sende af sig selv (målt 2026-09-21)
+
+Autostart-genvejen starter appen med `--bakke`, og dér **bliver den stående uden at sende**, også når et program har kameraet åbent.
+`start_stop()` kaldes kun fra tre steder, og alle tre er en brugerhandling: knappen **Start kamera**, bakkens **Test kamera** og bakkens **Fortsæt**.
+Intet kalder den ved opstart, og `koerer` gemmes ikke i `config.json`, så den er falsk igen ved hvert login.
+
+Målt mod en rigtig telefon med en fremmed DirectShow-modtager åben hele vejen igennem:
+
+| | billeder | forskellige størrelser |
+|---|---:|---:|
+| appen urørt i bakken | 8 | 1 (filterets »ingen frames«-plakat) |
+| efter ét `Start kamera` | 16 | 16 (levende billede, 1920x1080) |
+
+Det betyder at brugeren skal ind i bakken **én gang pr. login** før kameraet leverer noget.
+Det er værd at kende, fordi forgængeren gjorde det modsatte: den gamle Python-vagt ventede selv på at et program åbnede kameraet, og startede først da telefonens stream.
+Om det skal laves om er et produktvalg – enten start ved opstart når der er en telefon opsat, eller lad efterspørgsels-vagten arme sig selv – men som det står nu, vil et møde uden det ene klik vise plakaten.
 
 ## Målte fund der endnu ikke er rettet
 
