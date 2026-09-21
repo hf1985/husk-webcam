@@ -34,6 +34,9 @@ med vilje – de lovlige eksempler skal ses igennem hver gang.
   Bumper du `Cargo.toml` uden at rette `.rc`-filen, hedder installeren det nye nummer mens
   exe'ens egenskabsdialog viser det gamle. Ret begge, eller lad `build.rs` generere blokken
   af `CARGO_PKG_VERSION`.
+  Gaten `scripts/tjek-version.ps1` måler nu alle fire felter plus taggen og fejler lukket;
+  byggekæden kører den på hvert push, så en glemt `.rc`-rettelse stopper en tag-kørsel frem
+  for at slippe igennem som en udgivelse.
 - Bevar ophavsretsnotitserne i `src/HuskFilter/`. To tredjeparter bor der: Unity Capture og
   Microsofts DirectShow-baseklasser i `streams.h`/`streams.cpp`. Begge er MIT, men
   ophavsretten er ikke projektets. Se [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
