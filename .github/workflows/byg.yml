@@ -1,0 +1,217 @@
+# Den offentlige byggekæde.
+#
+# Den kører PRÆCIS de tre trin docs/byg-fra-kilde.md beskriver, i den rækkefølge, med de
+# samme scripts. Der er med vilje ingen parallel byggeopskrift her: en kæde der byggede
+# anderledes end vejledningen ville dokumentere noget andet end det man selv kan bygge.
+#
+# ⛔ Hvorfor kæden findes: indtil den var her, kunne ingen udefra vise at den udgivne binær
+#    kom fra den kildekode der ligger i repoet. Kæden bygger i et miljø hvis logs alle kan
+#    læse, og lægger en herkomst-attest (build provenance) på artefakterne, så enhver kan
+#    verificere forbindelsen binær -> commit uden at stole på os.
+#
+# ⛔ -Forsoeg 1 er bevidst. byg-rust.ps1 falder som standard tilbage til friske byggetræer,
+#    fordi Smart App Control kan blokere en nybygget usigneret binær på en udviklermaskine.
+#    Den omgåelse hører ikke til her: på en runner uden håndhævelse ville et fald tilbage
+#    skjule en ægte fejl i stedet for at afsløre den.
+
+name: byg
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: byg-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  byg:
+    name: Byg, prøv og attestér
+    runs-on: windows-2025
+    timeout-minutes: 60
+    permissions:
+      contents: write      # kun de taggede kørsler skriver en udgivelse
+      id-token: write      # herkomst-attesten underskrives med et OIDC-token
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Værktøjs-inventar
+        shell: pwsh
+        run: |
+          # Miljøet er en del af det der dokumenteres: en binær uden et kendt byggemiljø
+          # kan ikke reproduceres af andre.
+          $linjer = @('| værktøj | version |', '|---|---|')
+          $linjer += '| runner-billede | {0} |' -f $env:ImageOS
+          $linjer += '| rustc | {0} |' -f (rustc --version)
+          $linjer += '| cargo | {0} |' -f (cargo --version)
+          $nsis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          if (-not (Test-Path $nsis)) { throw "makensis.exe findes ikke i $nsis" }
+          $linjer += '| makensis | {0} |' -f ((& $nsis /VERSION) -join '')
+          $linjer += '| commit | `{0}` |' -f $env:GITHUB_SHA
+          $linjer | ForEach-Object { Write-Output $_ }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $linjer
+          # Trinnet er en INVENTARLISTE, ikke en gate: makensis /VERSION melder sin version
+          # gennem exitkoden, og den maa ikke faelde et trin der kun skriver ned hvad der er.
+          exit 0
+
+      - name: Scrub-gate (intet privat i et offentligt repo)
+        shell: pwsh
+        run: powershell -File scripts\scrub-tjek.ps1
+
+      - name: Versions-gate (Cargo.toml, husk.rc og taggen skal være enige)
+        shell: pwsh
+        run: |
+          $arg = @()
+          if ($env:GITHUB_REF -like 'refs/tags/v*') { $arg = @('-ForventetTag', $env:GITHUB_REF_NAME) }
+          powershell -File scripts\tjek-version.ps1 @arg
+          exit $LASTEXITCODE
+
+      - name: Rust-suiten
+        shell: pwsh
+        run: powershell -File scripts\byg-rust.ps1 -Test -Forsoeg 1
+
+      - name: 1. Appen
+        shell: pwsh
+        run: powershell -File scripts\byg-rust.ps1 -Profil release -Forsoeg 1
+
+      - name: 2. Kamera-filteret
+        shell: pwsh
+        run: powershell -File src\HuskFilter\byg.ps1
+
+      - name: 3. Installeren
+        shell: pwsh
+        run: powershell -File scripts\byg-installer.ps1 -FilterDir "$env:LOCALAPPDATA\husk-webcam-build\filter"
+
+      - name: Røgtjek af vinduet
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          # Appen bygger sit eget vindue, TEGNER det og gemmer billedet. Det er den eneste
+          # produktprøve der kan køre uden en telefon og uden et menneske.
+          $exe = Join-Path $env:LOCALAPPDATA 'husk-webcam-build\husk-rust\release\HuskWebcam.exe'
+          $png = Join-Path $env:RUNNER_TEMP 'vindue.png'
+          & $exe --vindue-roegtjek $png
+          if ($LASTEXITCODE -ne 0) { throw "roegtjekket gav exit $LASTEXITCODE" }
+          if (-not (Test-Path $png)) { throw "roegtjekket meldte 0, men $png findes ikke" }
+          Write-Output ('billede: {0} bytes' -f (Get-Item $png).Length)
+
+      - name: Saml artefakter og mål dem
+        id: saml
+        shell: pwsh
+        run: |
+          $byg = Join-Path $env:LOCALAPPDATA 'husk-webcam-build'
+          $ud = Join-Path $env:RUNNER_TEMP 'udgivelse'
+          New-Item -ItemType Directory -Force -Path $ud | Out-Null
+
+          $setup = @(Get-ChildItem (Join-Path $byg 'installer') -Filter 'HuskWebcam-*-setup.exe' -File)
+          if ($setup.Count -ne 1) { throw "forventede PRAECIS een installer, fandt $($setup.Count)" }
+          $kilder = @($setup[0].FullName,
+                      (Join-Path $byg 'husk-rust\release\HuskWebcam.exe'),
+                      (Join-Path $byg 'filter\HuskWebcamFilter64.dll'),
+                      (Join-Path $byg 'filter\HuskWebcamFilter32.dll'))
+          foreach ($k in $kilder) {
+            if (-not (Test-Path $k)) { throw "MANGLER: $k" }
+            Copy-Item $k $ud -Force
+          }
+
+          # Version og roegtjeks-billede med, saa artefaktet kan laeses uden at aabne loggen.
+          $version = [regex]::Match($setup[0].Name, 'HuskWebcam-(.+)-setup\.exe').Groups[1].Value
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+          $png = Join-Path $env:RUNNER_TEMP 'vindue.png'
+          if (Test-Path $png) { Copy-Item $png $ud -Force }
+
+          $linjer = @(Get-ChildItem $ud -File | Sort-Object Name | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name
+          })
+          Set-Content -Path (Join-Path $ud 'SHA256SUMS.txt') -Value $linjer -Encoding ascii
+
+          $tabel = @('', '| fil | bytes | sha256 |', '|---|---:|---|')
+          $tabel += @(Get-ChildItem $ud -File | Sort-Object Name | ForEach-Object {
+            '| {0} | {1} | `{2}` |' -f $_.Name, $_.Length, (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          })
+          $tabel | ForEach-Object { Write-Output $_ }
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $tabel
+
+      - name: Herkomst-attest
+        # Attesten underskrives med runnerens OIDC-token, og det udstedes ikke til en
+        # pull request fra en fork. Et forsoeg dér ville fejle paa rettigheder, ikke paa kode.
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            ${{ runner.temp }}/udgivelse/HuskWebcam-*-setup.exe
+            ${{ runner.temp }}/udgivelse/HuskWebcam.exe
+            ${{ runner.temp }}/udgivelse/HuskWebcamFilter64.dll
+            ${{ runner.temp }}/udgivelse/HuskWebcamFilter32.dll
+
+      - name: Gem artefakterne
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: husk-webcam-${{ steps.saml.outputs.version }}-${{ github.sha }}
+          path: ${{ runner.temp }}/udgivelse
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Udgiv (kun på en tag-kørsel)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ud = Join-Path $env:RUNNER_TEMP 'udgivelse'
+          $version = '${{ steps.saml.outputs.version }}'
+          $setup = "HuskWebcam-$version-setup.exe"
+          $sum = (Get-Content (Join-Path $ud 'SHA256SUMS.txt') | Where-Object { $_ -like "*$setup" }) -split '\s+' | Select-Object -First 1
+
+          # ⛔ Noterne skrives til en fil og sendes med --notes-file. En lang tekst med danske
+          #    bogstaver og backticks paa kommandolinjen krydser for mange fortolkende lag.
+          $noter = @(
+            "Hent ``$setup`` nedenfor.",
+            '',
+            '## Kontrollér filen',
+            '',
+            'SHA256:',
+            '',
+            '```',
+            "$sum  $setup",
+            '```',
+            '',
+            'Filen er bygget af denne udgivelses commit i en offentlig byggekæde, og der ligger',
+            'en herkomst-attest på den. Den kan efterprøves uden at stole på os:',
+            '',
+            '```',
+            "gh attestation verify $setup --repo $env:GITHUB_REPOSITORY",
+            '```',
+            '',
+            '## Installeren er usigneret',
+            '',
+            'SmartScreen stopper den første gang. Klik **Flere oplysninger** og **Kør alligevel**.',
+            'Se README for hvorfor, og hvad advarslen betyder.',
+            '',
+            "Commit: ``$env:GITHUB_SHA``"
+          )
+          $noterFil = Join-Path $env:RUNNER_TEMP 'udgivelsesnoter.md'
+          Set-Content -Path $noterFil -Value $noter -Encoding utf8
+
+          $filer = @(Get-ChildItem $ud -File | ForEach-Object { $_.FullName })
+          gh release create $env:GITHUB_REF_NAME @filer --verify-tag --title "Husk Webcam $version" --notes-file $noterFil
+          if ($LASTEXITCODE -ne 0) { throw "gh release create gav exit $LASTEXITCODE" }
+
+  skyvagt:
+    name: Sky-drev-vagten, begge retninger
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hermetisk prøve af vagten i build.rs
+        shell: pwsh
+        run: powershell -File scripts\proev-skyvagt.ps1

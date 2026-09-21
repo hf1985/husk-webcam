@@ -22,8 +22,16 @@ $ErrorActionPreference = 'Stop'
 if (-not $Rod) { $Rod = Split-Path -Parent $PSScriptRoot }
 
 # Filer der maales: alt sporet OG alt usporet, minus .git og byggeartefakter.
+#
+# !! `.git` KAN VAERE EN FIL, ikke en mappe. Ligger gitdir'en et andet sted - som den goer
+#    naar arbejdstraeet ligger paa et sky-drev og repoet paa lokal disk - er `.git` en
+#    ETLINJES PEGER med en ABSOLUT lokal sti, altsaa med brugernavnet i. Den fil er gits egen
+#    og bliver aldrig committet, men et filter der kun kendte mappeformen maalte den, og
+#    gaten stod da ROED paa selve udviklermaskinen (maalt 2026-09-21). En gate der er roed af
+#    sig selv bliver ignoreret, og saa fanger den heller ikke det den findes for.
 $filer = Get-ChildItem -LiteralPath $Rod -Recurse -File |
-    Where-Object { $_.FullName -notmatch '\\\.git\\' -and $_.FullName -notmatch '\\target\\' }
+    Where-Object { $_.FullName -notmatch '\\\.git\\' -and $_.Name -ne '.git' -and
+                   $_.FullName -notmatch '\\target\\' }
 Write-Output ("maaler {0} filer under {1}" -f $filer.Count, $Rod)
 
 function Soeg([string]$Moenster) {
