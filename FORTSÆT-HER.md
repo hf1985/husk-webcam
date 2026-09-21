@@ -33,6 +33,28 @@ Uden en byggekæde uden for huset ville fejlen først være dukket op ved næste
 Herkomst-attesten er efterprøvet fra en udviklermaskine i begge retninger: den hentede installer giver `gh attestation verify` exit 0, og en kopi med ét byte vendt giver exit 1 med `HTTP 404` på sin sum.
 SHA256 for alle fire artefakter overlevede turen gennem GitHubs artefakt-lager uændret.
 
+⚠️ **Buildet er ikke bit-reproducerbart, og det er målt frem for antaget.**
+To kørsler hvor den eneste forskel var `.md`-filer gav fire FORSKELLIGE SHA256, og installeren skiftede endda størrelse (438.100 mod 438.214 bytes), mens exe og DLL'er beholdt deres.
+Det betyder at »samme kilde« ikke kan efterprøves ved at bygge igen og sammenligne summer.
+Det er netop derfor forbindelsen binær til kilde hviler på **attesten**, ikke på en sum.
+
+## Produktprøve på en rigtig maskine, 2026-09-21
+
+Installeren fra kæden er kørt på en udviklermaskine med Windows 11, og produktet er prøvet ende til ende.
+Det er **ikke** den rene VM-prøve punkt 2 nedenfor efterlyser – maskinen havde i forvejen en umodificeret Unity Capture installeret – men alt andet end »ren maskine« er nu målt frem for arvet.
+
+- **Installation:** `/S`, exit 0. Fire filer i `C:\Program Files\Husk Webcam`, afinstallations-nøgle med korrekt version og `EstimatedSize`, start-menu-gruppe og autostart-genvej. Exe'ens egenskabsdialog viser `0.1.0.0`, altså det versions-gaten måler.
+- **Registrering:** `Husk Webcam` står som DirectShow-kamera i **både** 64- og 32-bit-viewet, og begge CLSID'er peger ind i app-mappen. Den eksisterende Unity Capture er urørt; de to filtre deler ingen CLSID.
+- **Ende til ende:** en fremmed modtager åbnede kameraet, `--maal-efterspoergsel` gik til 1, og `--send-testmoenster` leverede `ok=238 frameskip=1 ingen-modtager=1 for-stor=0`. Billederne kom ud af kameraet.
+- **Uden modtager** svarer senderen `ingen-modtager` for hver frame og exit 5 med hele `INGEN_MODTAGER_FORKLARING` – altså netop den streng der ikke kunne kompilere for en time siden.
+- **Afinstallation, målt med kanariefiler:** to fremmede filer blev lagt i app-mappen før `Uninstall.exe /S`. Bagefter var produktets egne fire filer, begge CLSID-registreringer, afinstallations-nøglen og begge genveje væk, mens **begge kanarier og mappen selv stod tilbage**. `.nsi`-filens begrundelse for at afvise `RMDir /r` holder altså på den færdige installer, ikke kun på proben. Maskinen er geninstalleret bagefter.
+- **Smart App Control blokerede hverken installeren eller appen**, selv om den står i håndhævelse på maskinen og afviser nybyggede binærer dér. Maskinen kan altså køre produktet fra kæden, men ikke bygge det selv.
+
+⚠️ **VLC viser billedet forkert, og det er VLC's fejl – ikke produktets.**
+I VLC 3.0.23 kommer billedet lodret vendt og med rød og blå byttet. `ffmpeg` på samme kamera og samme frames viser det **rigtigt**: rød, grøn foroven og blå, hvid forneden, præcis som `main.rs::testmoenster` skriver det.
+Tre ting peger samme vej: filteret melder `MEDIASUBTYPE_ARGB32` med positiv `biHeight`, altså bund-op, og konverterer selv RGBA til BGRA; filterets **eget** indbyggede »ingen frames«-billede kommer også vendt ud i VLC, og det billede rører senderen aldrig; og den **umodificerede** Unity Capture giver nøjagtig samme forkerte resultat i VLC.
+Det er værd at have i baghovedet, fordi VLC er det første en nysgerrig bruger griber efter.
+
 ## Næste arbejde, i rækkefølge
 
 1. **Skær en udgivelse med kæden.** Bump versionen i `Cargo.toml` **og** `res/husk.rc` (versions-gaten måler begge), sæt taggen, og lad kørslen udgive. Det giver den første installer hvis forbindelse til kilden kan efterprøves udefra.
@@ -58,5 +80,5 @@ Det siger at den oversættes, ikke at teksten står rigtigt i alle tilstande; in
 Her stod tre ting. To af dem er nu målt, og det tredje er stadig arvet.
 
 1. ~~Rust-suiten er ikke kørt på den udgivne kode.~~ **Lukket:** suiten kører på hvert push, 235 bestået.
-2. **Produktprøven i en ren VM er stadig ARVET**, ikke gentaget: den blev kørt på et privat 438.069-byte-build. Kæden tegner vinduet i et rent miljø på hvert push, men den **installerer ikke** installeren, registrerer ikke filteret og åbner ikke kameraet i et mødeprogram. Den prøve kræver et menneske og en VM.
+2. **Produktprøven er nu kørt på kædens egen installer** (se afsnittet ovenfor): installation, registrering i begge views, frames gennem kameraet til en fremmed modtager, og afinstallation målt med kanariefiler. **Det der stadig mangler, er en REN maskine**: prøven kørte på en udviklermaskine der i forvejen havde Unity Capture installeret, så den kan ikke svare på om en maskine uden noget Unity Capture-slægtskab opfører sig ens. Kæden selv installerer ikke noget; den tegner kun vinduet.
 3. ~~Sky-disk-vagtens afvis-retning er ukørt.~~ **Lukket:** `scripts/proev-skyvagt.ps1` kører den mod en falsk Drive-montering, og begge retninger er grønne. Prøven dømmer på vagtens egen begrundelse frem for på exitkoden, så et build der falder af en anden grund ikke kan ligne en vagt der virker.
