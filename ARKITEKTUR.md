@@ -18,15 +18,18 @@ Husk på telefonen -- MJPEG/HTTP --> HuskWebcam.exe --> HuskWebcamFilter{32,64}.
 **Windows leverer funktionerne.** Eneste DIREKTE afhængighed er Microsofts `windows`-bindinger:
 WIC afkoder JPEG, WinHTTP henter HTTP, GDI tegner og DPAPI krypterer. JSON og MJPEG parses i
 projektet selv. Det holder appen under en halv megabyte uden medpakket runtime; begrundelsen
-står også i `Cargo.toml`. (`Cargo.lock` har 14 pakker i alt: `windows`-familien plus de fire
-proc-makro-afhængigheder den selv trækker ind.)
+står også i `Cargo.toml`. (`Cargo.lock` har **16** poster: crate'en selv plus 15
+afhængigheder, som alle er `windows`-familien eller de proc-makroer den selv trækker ind.
+Målt med `grep -c '^\[\[package\]\]'`.)
 
 **Filteret er ændret tre steder i forhold til Unity Capture**, alle tre navngivning:
 enhedens navn og de fire CLSID'er i `HuskFilter.cpp`, og de fire delte kerneobjekter i
 `shared.inl`. En egen CLSID isolerer kun COM-registreringen; delte de to filtre stadig mutex,
 events og mapping, ville de sende frames til hinandens klienter og ligne billedflimmer.
-Ophavsret og licenser bevares uændret; se [LICENSE](LICENSE), som også dækker Microsofts
-DirectShow-baseklasser i `streams.h` og `streams.cpp`.
+Ophavsret og licenser bevares uændret. ⚠️ **Mappen har TO tredjeparter, ikke én:** ud over
+Unity Capture er `streams.h` og `streams.cpp` Microsofts DirectShow-baseklasser, og de er
+92,5 % af kildelinjerne dér. Begge er MIT; se
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 **Afinstallér efter pakkelisten.** `byg-installer.ps1` genererer én `Delete` pr. pakket fil
 og én `RMDir` pr. mappe i omvendt dybde-orden fra samme filer som `File /r` pakker.

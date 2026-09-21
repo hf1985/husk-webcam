@@ -32,10 +32,16 @@ uden for sky-drevet, eller brug en lokal klon.
 ### Smart App Control kan blokere en nybygget binær
 
 Fejlen `An Application Control policy has blocked this file (os error 4551)` kan ramme
-både usignerede app-/testbinærer og Cargos build-scripts. Dommen er indholdsafhængig;
-samme kode kan bygge grønt én gang og afvises næste gang.
+både usignerede app-/testbinærer og Cargos build-scripts.
 
-`byg-rust.ps1` forsøger op til tre byggetræer. Det er en omgåelse; kuren er signering.
+⚠️ **Det er ikke kun indholdet.** »Prøv igen med et frisk byggetræ« hjælper nogle gange, men
+det er ikke en pålidelig udvej: målt 2026-09-21 blev ni forsøg i træk afvist, heriblandt et
+`cargo build --release` på en kilde der var verificeret **byte-identisk** med den der byggede
+grønt en time før. Tilstanden kan altså stramme, og så kan maskinen ikke bygge produktet
+overhovedet.
+
+`byg-rust.ps1` forsøger op til tre byggetræer. Det er en omgåelse; kuren er signering, og
+indtil da: byg på en maskine uden Smart App Control i håndhævelse.
 **Slå ikke Smart App Control fra:** det kan kun fortrydes ved at geninstallere Windows.
 
 ## 2. Kamera-filteret

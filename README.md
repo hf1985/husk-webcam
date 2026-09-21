@@ -72,6 +72,8 @@ Se [docs/byg-fra-kilde.md](docs/byg-fra-kilde.md).
 
 ## Licens
 
-MIT – se [LICENSE](LICENSE). Kamera-filteret i `src/HuskFilter/` er vendoreret fra
-[Unity Capture](https://github.com/schellingb/UnityCapture) og beholder sin egen ophavsret og
-MIT-licens.
+MIT – se [LICENSE](LICENSE).
+
+Kamera-filteret i `src/HuskFilter/` bærer to vendorerede tredjeparter, begge MIT:
+[Unity Capture](https://github.com/schellingb/UnityCapture) og Microsofts DirectShow-baseklasser.
+Deres ophavsret og notitser står i [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
