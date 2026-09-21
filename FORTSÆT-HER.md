@@ -1,6 +1,10 @@
 # FORTSÆT HER – Husk Webcam
 
-**2026-09-21:** repoet er nyt; produktet virker. Offentlig byggekæde og signatur mangler.
+**2026-09-21:** repoet er nyt og offentligt, og `v0.1.0` er udgivet med installeren som asset
+(438.066 bytes, SHA256 `3fe2c463…b27c`, efterprøvet ved at hente den ned igen fra dens
+offentlige URL). Produktet virker. Offentlig byggekæde og signatur mangler.
+⚠️ Binæren i `v0.1.0` er bygget af commit `c473338`, mens taggen peger på `94a2551`;
+forskellen står i udgivelsens tekst.
 Udviklingen foregår her. Det tidligere private repo er kun historisk arkiv: dets commits
 indeholder interne noter, maskinnavne og private netværksadresser og må ikke følge med.
 Her er kun produkt, tests og offentlig dokumentation.
