@@ -79,6 +79,28 @@ Det betyder at brugeren skal ind i bakken **én gang pr. login** før kameraet l
 Det er værd at kende, fordi forgængeren gjorde det modsatte: den gamle Python-vagt ventede selv på at et program åbnede kameraet, og startede først da telefonens stream.
 Om det skal laves om er et produktvalg – enten start ved opstart når der er en telefon opsat, eller lad efterspørgsels-vagten arme sig selv – men som det står nu, vil et møde uden det ene klik vise plakaten.
 
+## Telefonsiden, gennemgået 2026-09-22
+
+Grænsefladen er i orden: de seks endepunkter vi kalder findes alle i den nyeste telefon-app.
+Tre ting om produktet omkring den:
+
+1. **Forsidekameraet kræver 1.2, ikke 1.1** - funktionen kom i 1.1, men den udgave starter en ny
+   baggrundsløkke pr. sideskift. README og `forbindelsestjek.rs` er rettet.
+   ⛔ **Detektionen er med vilje uændret:** den dømmer på feltet `front` i `/flags`, aldrig på et
+   versionsnummer. Et felt kan måles; en version kan lyve.
+2. ⚠️ **Telefonen gemmer ikke sidevalget hen over en genstart af appen**, så en opdatering sætter
+   den tilbage til bagsiden uden at nogen rørte `/set`. README nævner det.
+   ⛔ **Kodelæsning af telefonsiden, ikke målt på en enhed** - lav det ikke om til en måling uden
+   at tage den.
+3. ⛔ **Gøres tokenet obligatorisk på telefonsiden, brækker enhver eksisterende opsætning**, og
+   det samme gælder en strammere kilde-IP-regel. Da er token-feltet ikke længere valgfrit, og
+   `AdgangNaegtet` bliver reglen frem for undtagelsen. Intet er besluttet.
+
+**Rettet samme dag:** `husk-webcam-rs/1.1` stod som literal seks steder, mens `Cargo.toml` stod
+på `0.1.0`. Den er nu `winhttp::BRUGERAGENT` af `CARGO_PKG_VERSION`, så versions-gaten dækker den.
+⚠️ Set, men ikke målt: `aabn()` tilføjer en `User-Agent`-header UD OVER sessionens egen, så
+anmodningen kan bære feltet to gange. Fiksturen gemmer ikke headere, og telefonen læser dem ikke.
+
 ## Målte fund der endnu ikke er rettet
 
 En adversarisk gennemgang af hele træet 2026-09-21 fandt fire ting, efterprøvet på disken.

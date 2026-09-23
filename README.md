@@ -12,7 +12,8 @@ netværk. Denne PC-side henter strømmen og skriver den ind i kameraenheden.
 ## Krav
 
 - Windows 10 eller 11, 64-bit.
-- Husk installeret på telefonen.
+- Husk installeret på telefonen. Appen ligger i F-Droid som `co.xplat.husk`, og kan også hentes
+  fra [xplat.co/husk](https://xplat.co/husk).
 - Telefon og PC på samme netværk – dit eget LAN, eller en krypteret tunnel som Tailscale.
   Strømmen er almindelig HTTP og hører ikke hjemme på et netværk du ikke selv styrer.
 
@@ -53,8 +54,12 @@ Kommandoen køres fra en klon af repoet; [byggevejledningen](docs/byg-fra-kilde.
    - **Telefonens adresse** – Husk viser den i appens egen statusvisning.
    - **Token** – kun hvis du har slået et til på telefonen. Det gemmes beskyttet med Windows'
      egen brugerkryptering, men det beskytter ikke selve forbindelsen.
-   - **Grundrotation** og tyngdesensor efter behov. **Forsidekameraet kræver Husk 1.1** på
-     telefonen.
+   - **Grundrotation** og tyngdesensor efter behov. **Forsidekameraet kræver Husk 1.2 eller
+     nyere** på telefonen. Funktionen kom i 1.1, men den udgave starter en ny baggrundsløkke
+     for hvert sideskift, og det er rettet i 1.2.
+     Telefonen gemmer i øvrigt ikke sidevalget hen over en genstart af Husk-appen: har den
+     opdateret eller er den startet forfra, står den på bagsidekameraet igen, og du vælger blot
+     forsiden på ny.
 3. Vælg **Husk Webcam** som kamera i det program du skal bruge.
 
 Appen kan køre som et vindue eller som et bakke-ikon. Autostart-genvejen starter den i bakken.

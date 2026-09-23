@@ -161,6 +161,15 @@ impl Svar {
     }
 }
 
+/// Vores User-Agent, ÉT sted og afledt af pakkeversionen.
+///
+/// ⛔ Her stod `"husk-webcam-rs/1.1"` som en literal seks steder, mens `Cargo.toml` stod på en
+/// helt anden version. Det var en versionskilde mere end de tre versions-gaten måler, og den
+/// eneste der ikke kunne fejle synligt: en forkert UA ser ud præcis som en rigtig.
+/// Telefonen læser den ikke, så feltet er til logge og fejlsøgning - og dér er en version der
+/// lyver værre end ingen version.
+pub const BRUGERAGENT: &str = concat!("husk-webcam-rs/", env!("CARGO_PKG_VERSION"));
+
 /// En levende WinHTTP-session. Genbruges af alle kald fra samme sted.
 pub struct Session {
     session: Handle,
@@ -247,7 +256,7 @@ impl Session {
             );
         }
 
-        let hdr = bred("User-Agent: husk-webcam-rs/1.1\r\n");
+        let hdr = bred(&format!("User-Agent: {}\r\n", BRUGERAGENT));
         unsafe {
             let _ = WinHttpAddRequestHeaders(
                 anmodning.0,

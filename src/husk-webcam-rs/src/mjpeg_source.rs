@@ -15,7 +15,7 @@ use std::time::Duration;
 
 use crate::mjpeg_parser::MjpegParser;
 use crate::source_status::{Backoff, SourceStatus, StaleClock};
-use crate::winhttp::Session;
+use crate::winhttp::{BRUGERAGENT, Session};
 
 /// En hel JPEG-frame med det oejeblik den ankom, maalt monotont.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -215,7 +215,7 @@ impl Drop for MjpegSource {
 const LAESEFRIST: Duration = Duration::from_secs(5);
 
 fn loeb(url: String, forbindelsesfrist: Duration, indre: Arc<Mutex<Indre>>, stop: Arc<AtomicBool>) {
-    let Ok(session) = Session::ny("husk-webcam-rs/1.1") else {
+    let Ok(session) = Session::ny(BRUGERAGENT) else {
         return;
     };
     let mut backoff = Backoff::default();

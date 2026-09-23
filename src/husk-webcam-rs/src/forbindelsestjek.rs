@@ -10,7 +10,7 @@
 use crate::husk_urls;
 use crate::json;
 use crate::url_redactor;
-use crate::winhttp::{HttpFejl, Session};
+use crate::winhttp::{BRUGERAGENT, HttpFejl, Session};
 
 /// Hvad et forbindelsestjek fandt. Hver vaerdi kraever sin EGEN handling af brugeren.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,11 +48,11 @@ pub struct Forbindelsestjek {
 
 impl Forbindelsestjek {
     pub fn ny() -> Result<Forbindelsestjek, HttpFejl> {
-        Ok(Forbindelsestjek { session: Session::ny("husk-webcam-rs/1.1")?, frist_ms: 6000 })
+        Ok(Forbindelsestjek { session: Session::ny(BRUGERAGENT)?, frist_ms: 6000 })
     }
 
     pub fn med_frist(frist_ms: u32) -> Result<Forbindelsestjek, HttpFejl> {
-        Ok(Forbindelsestjek { session: Session::ny("husk-webcam-rs/1.1")?, frist_ms })
+        Ok(Forbindelsestjek { session: Session::ny(BRUGERAGENT)?, frist_ms })
     }
 
     pub fn tjek(&self, vaert: &str, token: Option<&str>) -> Forbindelsessvar {
@@ -157,8 +157,8 @@ pub fn doem_flags(krop: &str) -> Forbindelsessvar {
     let kamera_koerer = kam.som_bool() == Some(true);
 
     let tekst = if front.is_none() {
-        "Forbundet. ⚠️ Telefonen er en ÆLDRE Husk end 1.1: /flags har intet \"front\"-felt, \
-         så kameraside kan ikke vælges herfra. Opgradér appen."
+        "Forbundet. ⚠️ Telefonen er en ÆLDRE Husk: /flags har intet \"front\"-felt, \
+         så kameraside kan ikke vælges herfra. Opgradér appen til 1.2 eller nyere."
     } else {
         "Forbundet, og telefonen er Husk 1.1 eller nyere - kameraside kan vælges herfra. \
          (Kameraet er dovent; at det står stille lige nu er normalt.)"

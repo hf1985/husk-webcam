@@ -47,7 +47,7 @@ use crate::source_status::SourceStatus;
 use crate::unity_sender::{INGEN_MODTAGER_FORKLARING, SendResultat, UnityCaptureSender};
 use crate::url_redactor;
 use crate::wic;
-use crate::winhttp::Session;
+use crate::winhttp::{BRUGERAGENT, Session};
 
 // ---- kontrol-id'er ------------------------------------------------------------------
 
@@ -1175,7 +1175,7 @@ fn genanvend_front_ved_ny_forbindelse(app: &mut App) {
 fn saet_front(t: &TelefonConfig) -> String {
     let token = t.token();
     let url = husk_urls::set_front(&t.vaert, t.front, token.as_deref());
-    let Ok(s) = Session::ny("husk-webcam-rs/1.1") else {
+    let Ok(s) = Session::ny(BRUGERAGENT) else {
         return "Kunne ikke oprette en HTTP-session.".to_string();
     };
 
@@ -1307,7 +1307,7 @@ fn start_tyngdemaaling(app: &mut App) {
 }
 
 fn hent_tyngde(vaert: &str, token: Option<&str>) -> Option<[f64; 3]> {
-    let s = Session::ny("husk-webcam-rs/1.1").ok()?;
+    let s = Session::ny(BRUGERAGENT).ok()?;
     let svar = s.get(&husk_urls::gravity(vaert, token), 4000).ok()?;
     if !svar.er_ok() {
         return None;
