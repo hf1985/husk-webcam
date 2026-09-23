@@ -92,6 +92,8 @@ Tre ting om produktet omkring den:
    den tilbage til bagsiden uden at nogen rørte `/set`. README nævner det.
    ⛔ **Kodelæsning af telefonsiden, ikke målt på en enhed** - lav det ikke om til en måling uden
    at tage den.
+   **2026-09-23: Husk 1.3 gemmer valget** (`P_app_husk` `e5bacb9`), men umålt på en enhed, så
+   README er ikke rettet. Ret den når `/flags.front` er målt over en genstart på 1.3.
 3. ⛔ **Gøres tokenet obligatorisk på telefonsiden, brækker enhver eksisterende opsætning**, og
    det samme gælder en strammere kilde-IP-regel. Da er token-feltet ikke længere valgfrit, og
    `AdgangNaegtet` bliver reglen frem for undtagelsen. Intet er besluttet.
