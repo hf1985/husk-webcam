@@ -4,9 +4,8 @@
 `.github/workflows/byg.yml` kører de tre byggetrin fra [byggevejledningen](docs/byg-fra-kilde.md) på hvert push, og den lægger en herkomst-attest på artefakterne.
 Kæden er beskrevet i vejledningen; her står kun hvad den har MÅLT, og hvad der stadig mangler.
 
-⚠️ **`v0.1.0` er stadig en håndbygget udgivelse.**
-Dens binær er bygget af commit `c473338`, mens taggen peger på `94a2551`, og den bærer ingen attest.
-Den næste udgivelse skal skæres af kæden: et tag `vX.Y.Z` kræver at taggen, `Cargo.toml` og `res/husk.rc` er enige, og kørslen lægger så installeren op med SHA256 og attest-vejledning.
+**2026-09-24: `v0.2.0` er skåret af kæden** (`75bc5dd`, installer + SHA256 + attest): »Hent fra telefonen« (Husk 1.4+).
+⚠️ Knappen er kun testet mod testfiksturet, IKKE mod en rigtig telefon på 1.4; telefonens ruter er målt for sig med curl.
 
 ## Det kæden fandt på sin første kørsel
 
