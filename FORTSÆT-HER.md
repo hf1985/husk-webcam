@@ -97,6 +97,7 @@ Tre ting om produktet omkring den:
 3. ⛔ **Gøres tokenet obligatorisk på telefonsiden, brækker enhver eksisterende opsætning**, og
    det samme gælder en strammere kilde-IP-regel. Da er token-feltet ikke længere valgfrit, og
    `AdgangNaegtet` bliver reglen frem for undtagelsen. Intet er besluttet.
+   **2026-09-24:** telefonerne får token; Husk 1.4 får et Godkend-API. Intet bygget.
 
 **Rettet samme dag:** `husk-webcam-rs/1.1` stod som literal seks steder, mens `Cargo.toml` stod
 på `0.1.0`. Den er nu `winhttp::BRUGERAGENT` af `CARGO_PKG_VERSION`, så versions-gaten dækker den.
