@@ -22,6 +22,7 @@ pub mod placeholder;
 pub mod secret;
 pub mod source_status;
 pub mod testfikstur;
+pub mod token_hentning;
 pub mod unity_sender;
 pub mod url_redactor;
 pub mod wic;

@@ -40,6 +40,33 @@ pub struct Opsaetning {
     pub healthz_status: u32,
     /// Boundary-navnet i Content-Type. Husk bruger `rigframe`.
     pub boundary: String,
+    /// Hvordan `/token/request` + `/token/status` opfoerer sig. Default: ruterne findes ikke,
+    /// som paa en Husk foer 1.4.
+    pub token_udfald: TokenUdfald,
+}
+
+/// Brugerens svar paa telefonen, som fiksturet spiller det.
+#[derive(Clone, Debug)]
+pub enum TokenUdfald {
+    /// 404 paa begge ruter (Husk foer 1.4).
+    FindesIkke,
+    /// `pending` et antal gange, derefter `approved` med tokenet. Udleveres én gang.
+    Godkendt { token: String, efter_poll: u32 },
+    /// `denied` ved foerste status-kald.
+    Afvist,
+    /// `expired` ved foerste status-kald.
+    Udloebet,
+    /// `pending` for evigt: ingen trykker.
+    Venter,
+}
+
+/// Fiksturets egen tilstand for den ene anmodning.
+#[derive(Default)]
+struct TokenTilstand {
+    id: Option<String>,
+    poll: u32,
+    udleveret: bool,
+    sidste_anmodning: Option<String>,
 }
 
 impl Default for Opsaetning {
@@ -54,6 +81,7 @@ impl Default for Opsaetning {
             flags_krop: r#"{"camera": false, "screen": false, "front": false}"#.to_string(),
             healthz_status: 200,
             boundary: "rigframe".to_string(),
+            token_udfald: TokenUdfald::FindesIkke,
         }
     }
 }
@@ -77,6 +105,7 @@ pub struct TestTelefon {
     forbindelser: Arc<AtomicU32>,
     afsluttede: Arc<AtomicU32>,
     opsaetning: Arc<Mutex<Opsaetning>>,
+    token: Arc<Mutex<TokenTilstand>>,
 }
 
 impl TestTelefon {
@@ -89,18 +118,25 @@ impl TestTelefon {
         let forbindelser = Arc::new(AtomicU32::new(0));
         let afsluttede = Arc::new(AtomicU32::new(0));
         let ops = Arc::new(Mutex::new(opsaetning));
+        let token = Arc::new(Mutex::new(TokenTilstand::default()));
 
         let s = Arc::clone(&stop);
         let f = Arc::clone(&forbindelser);
         let a = Arc::clone(&afsluttede);
         let o = Arc::clone(&ops);
+        let tk = Arc::clone(&token);
         // En kort accept-frist, saa loekken kan se stop-flaget uden at vente paa en klient.
         lytter.set_nonblocking(true)?;
         std::thread::Builder::new()
             .name(format!("husk-fikstur-{port}"))
-            .spawn(move || loop_accept(lytter, s, f, a, o))?;
+            .spawn(move || loop_accept(lytter, s, f, a, o, tk))?;
 
-        Ok(TestTelefon { praefiks, stop, forbindelser, afsluttede, opsaetning: ops })
+        Ok(TestTelefon { praefiks, stop, forbindelser, afsluttede, opsaetning: ops, token })
+    }
+
+    /// Query-strengen i den sidste `/token/request`, saa et ben kan se hvad klienten SENDTE.
+    pub fn sidste_token_anmodning(&self) -> Option<String> {
+        self.token.lock().unwrap_or_else(|e| e.into_inner()).sidste_anmodning.clone()
     }
 
     pub fn ny() -> std::io::Result<TestTelefon> {
@@ -206,6 +242,7 @@ fn loop_accept(
     forbindelser: Arc<AtomicU32>,
     afsluttede: Arc<AtomicU32>,
     opsaetning: Arc<Mutex<Opsaetning>>,
+    token: Arc<Mutex<TokenTilstand>>,
 ) {
     while !stop.load(Ordering::SeqCst) {
         match lytter.accept() {
@@ -214,10 +251,11 @@ fn loop_accept(
                 let f2 = Arc::clone(&forbindelser);
                 let a2 = Arc::clone(&afsluttede);
                 let o2 = Arc::clone(&opsaetning);
+                let t2 = Arc::clone(&token);
                 let _ = std::thread::Builder::new()
                     .name("husk-fikstur-klient".into())
                     .spawn(move || {
-                        let _ = betjen(s, stop2, f2, a2, o2);
+                        let _ = betjen(s, stop2, f2, a2, o2, t2);
                     });
             }
             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
@@ -234,6 +272,7 @@ fn betjen(
     forbindelser: Arc<AtomicU32>,
     afsluttede: Arc<AtomicU32>,
     opsaetning: Arc<Mutex<Opsaetning>>,
+    token: Arc<Mutex<TokenTilstand>>,
 ) -> std::io::Result<()> {
     s.set_nonblocking(false)?;
     s.set_read_timeout(Some(Duration::from_secs(5)))?;
@@ -264,7 +303,10 @@ fn betjen(
 
     let ops = opsaetning.lock().unwrap_or_else(|e| e.into_inner()).clone();
 
-    // Token-kontrollen gaelder ALT undtagen /healthz, praecis som Husk selv.
+    // Token-kontrollen gaelder ALT undtagen /healthz og de to token-ruter, praecis som Husk selv.
+    if sti == "/token/request" || sti == "/token/status" {
+        return token_rute(&mut s, sti, query, &ops.token_udfald, &token);
+    }
     if sti != "/healthz" {
         if let Some(kraevet) = &ops.kraevet_token {
             let givet = query
@@ -297,6 +339,44 @@ fn betjen(
         }
         _ => svar_tekst(&mut s, 404, "text/plain", b"findes ikke"),
     }
+}
+
+/// `/token/request` og `/token/status` som Husk 1.4 svarer dem, styret af [`TokenUdfald`].
+fn token_rute(
+    s: &mut TcpStream,
+    sti: &str,
+    query: &str,
+    udfald: &TokenUdfald,
+    tilstand: &Mutex<TokenTilstand>,
+) -> std::io::Result<()> {
+    if matches!(udfald, TokenUdfald::FindesIkke) {
+        return svar_tekst(s, 404, "text/plain", b"not found");
+    }
+    let mut t = tilstand.lock().unwrap_or_else(|e| e.into_inner());
+    if sti == "/token/request" {
+        t.sidste_anmodning = Some(query.to_string());
+        let id = "0123456789abcdef0123456789abcdef".to_string();
+        t.id = Some(id.clone());
+        t.poll = 0;
+        t.udleveret = false;
+        let krop = format!(r#"{{"id":"{id}","expires_in":120}}"#);
+        return svar_tekst(s, 200, "application/json", krop.as_bytes());
+    }
+    let givet = query.split('&').find_map(|f| f.strip_prefix("id=")).unwrap_or("");
+    if t.id.as_deref() != Some(givet) || t.udleveret {
+        return svar_tekst(s, 200, "application/json", br#"{"status":"expired"}"#);
+    }
+    t.poll += 1;
+    let krop = match udfald {
+        TokenUdfald::Godkendt { token, efter_poll } if t.poll > *efter_poll => {
+            t.udleveret = true;
+            format!(r#"{{"status":"approved","token":"{token}"}}"#)
+        }
+        TokenUdfald::Afvist => r#"{"status":"denied"}"#.to_string(),
+        TokenUdfald::Udloebet => r#"{"status":"expired"}"#.to_string(),
+        _ => r#"{"status":"pending"}"#.to_string(),
+    };
+    svar_tekst(s, 200, "application/json", krop.as_bytes())
 }
 
 fn svar_tekst(s: &mut TcpStream, status: u32, ct: &str, krop: &[u8]) -> std::io::Result<()> {

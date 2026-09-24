@@ -53,7 +53,8 @@ Kommandoen køres fra en klon af repoet; [byggevejledningen](docs/byg-fra-kilde.
    - **Navn** – hvad telefonen skal hedde i billedet.
    - **Telefonens adresse** – Husk viser den i appens egen statusvisning.
    - **Token** – kun hvis du har slået et til på telefonen. Det gemmes beskyttet med Windows'
-     egen brugerkryptering, men det beskytter ikke selve forbindelsen.
+     egen brugerkryptering, men det beskytter ikke selve forbindelsen. Med Husk 1.4 eller nyere
+     kan du i stedet klikke **Hent fra telefonen** og godkende på telefonen.
    - **Grundrotation** og tyngdesensor efter behov. **Forsidekameraet kræver Husk 1.2 eller
      nyere** på telefonen. Funktionen kom i 1.1, men den udgave starter en ny baggrundsløkke
      for hvert sideskift, og det er rettet i 1.2.

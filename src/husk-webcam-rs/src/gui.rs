@@ -44,6 +44,7 @@ use crate::json;
 use crate::mjpeg_source::MjpegSource;
 use crate::orientation::OrientationDamper;
 use crate::source_status::SourceStatus;
+use crate::token_hentning::{self, Hentningsdom, TokenHenter};
 use crate::unity_sender::{INGEN_MODTAGER_FORKLARING, SendResultat, UnityCaptureSender};
 use crate::url_redactor;
 use crate::wic;
@@ -66,6 +67,7 @@ const ID_STATUS: i32 = 1012;
 const ID_LAYOUT: i32 = 1013;
 const ID_STARTSTOP: i32 = 1014;
 const ID_KAMERASTATUS: i32 = 1015;
+const ID_HENT_TOKEN: i32 = 1016;
 
 // Bakke-menuens id'er ligger for sig, saa de aldrig kan forveksles med en kontrol.
 const ID_BAKKE_TEST: i32 = 2001;
@@ -107,6 +109,8 @@ enum Besked {
     Test(String, Option<bool>),
     /// En kildes tyngdemaaling, eller `None` hvis den ikke kunne tages.
     Tyngde(usize, Option<[f64; 3]>),
+    /// »Hent fra telefonen« er faerdig: tokenet hvis brugeren godkendte, og teksten til brugeren.
+    Token(Option<String>, String),
 }
 
 /// Broen mellem en levende [`MjpegSource`] og kompositoren.
@@ -656,6 +660,20 @@ unsafe fn byg_kontroller(app: &mut App, instans: windows::Win32::Foundation::HIN
         felt_b,
         24,
         ID_TOKEN,
+    );
+    b.kontrol(
+        "BUTTON",
+        "Hent fra telefonen",
+        WINDOW_STYLE(BS_PUSHBUTTON as u32),
+        12,
+        160,
+        26,
+        ID_HENT_TOKEN,
+    );
+    b.etiket(
+        "Kræver Husk 1.4 eller nyere: telefonen spørger om PC'en må få tokenet, og du godkender dér.",
+        felt_b,
+        38,
     );
     b.etiket(
         "Tokenet gemmes beskyttet med Windows' egen brugerkryptering, så det ikke står i \
@@ -1637,6 +1655,17 @@ unsafe extern "system" fn vindue_proc(hwnd: HWND, m: u32, wp: WPARAM, lp: LPARAM
                                 }
                             }
                         }
+                        Besked::Token(token, tekst) => {
+                            let _ = EnableWindow(kontrol(hwnd, ID_HENT_TOKEN), true);
+                            if let Some(t) = token {
+                                // Feltet fyldes, og gem() skriver det DPAPI-beskyttet via
+                                // TelefonConfig::saet_token - samme vej som et indtastet token.
+                                saet_tekst(hwnd, ID_TOKEN, &t);
+                                gem(app);
+                            }
+                            // Efter gem(), som selv skriver en statuslinje.
+                            saet_tekst(hwnd, ID_STATUS, &tekst);
+                        }
                         Besked::Tyngde(i, v) => {
                             if i < app.daempere.len() {
                                 match v {
@@ -1823,6 +1852,33 @@ unsafe fn haandter_kommando(app: &mut App, id: i32, kode: u32) {
                     };
                     let front = if s.dom == Forbindelsesdom::Ok { s.front } else { Some(true) };
                     let _ = svar.send(Besked::Test(format!("{praefiks}{}", s.tekst), front));
+                    vaek_gui(hwnd.hwnd());
+                });
+            }
+            ID_HENT_TOKEN => {
+                let vaert = hent_tekst(app.hwnd, ID_VAERT).trim().to_string();
+                if vaert.is_empty() {
+                    saet_tekst(app.hwnd, ID_STATUS, "Indtast telefonens adresse først.");
+                    return;
+                }
+                saet_tekst(app.hwnd, ID_STATUS, "Beder telefonen om tokenet …");
+                let _ = EnableWindow(kontrol(app.hwnd, ID_HENT_TOKEN), false);
+                let svar = app.til_gui.clone();
+                let hwnd = TraadHwnd::ny(app.hwnd);
+                let _ = std::thread::Builder::new().name("husk-token".into()).spawn(move || {
+                    let dom = match TokenHenter::ny() {
+                        Ok(h) => h.hent(&vaert, &token_hentning::computernavn(), |s| {
+                            let _ = svar.send(Besked::Status(s.to_string()));
+                            vaek_gui(hwnd.hwnd());
+                        }),
+                        Err(e) => Hentningsdom::Fejl(e.to_string()),
+                    };
+                    let tekst = dom.tekst();
+                    let token = match dom {
+                        Hentningsdom::Godkendt(t) => Some(t),
+                        _ => None,
+                    };
+                    let _ = svar.send(Besked::Token(token, tekst));
                     vaek_gui(hwnd.hwnd());
                 });
             }

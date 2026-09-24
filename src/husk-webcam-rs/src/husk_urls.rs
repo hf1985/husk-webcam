@@ -44,6 +44,18 @@ pub fn set_front(vaert: &str, front: bool, token: Option<&str>) -> String {
     byg(vaert, "/set", token, Some(if front { "front=1" } else { "front=0" }))
 }
 
+/// Bed telefonen om adgangstokenet (Husk 1.4+). Uden token; brugeren godkender paa telefonen.
+///
+/// ⛔ Ingen `new=`: se [`crate::token_hentning`].
+pub fn token_request(vaert: &str, klient: &str) -> String {
+    byg(vaert, "/token/request", None, Some(&format!("client={}", escape_data_string(klient))))
+}
+
+/// Status for en anmodning fra [`token_request`].
+pub fn token_status(vaert: &str, id: &str) -> String {
+    byg(vaert, "/token/status", None, Some(&format!("id={}", escape_data_string(id))))
+}
+
 fn byg(vaert: &str, sti: &str, token: Option<&str>, query: Option<&str>) -> String {
     let u = format!("http://{}{}", host(vaert), sti);
     let mut dele: Vec<String> = Vec::with_capacity(2);
