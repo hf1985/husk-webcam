@@ -61,7 +61,9 @@ function Byg([string]$Arch, [string]$Suffiks) {
 
     $bat = Join-Path $obj 'byg.bat'
     Set-Content -Path $bat -Value $linjer -Encoding ascii
-    & cmd.exe /c $bat 2>&1 | ForEach-Object { "    $_" }
+    # Uden 2>&1: under EAP=Stop ville en stderr-linje fra cl.exe kaste i PS 5.1 foer
+    # $LASTEXITCODE blev laest (check-ps-native-redirect.sh). stderr naar stadig konsollen.
+    & cmd.exe /c $bat | ForEach-Object { "    $_" }
     if ($LASTEXITCODE -ne 0) { throw "$Suffiks-buildet fejlede med $LASTEXITCODE" }
 
     # Doem paa ARTEFAKTET, ikke paa exitkoden alene (maaleregel 3).
