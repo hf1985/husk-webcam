@@ -41,8 +41,8 @@
 ; netop derfor rammer SysWOW64 og dermed den rigtige regsvr32.
 ;
 ; Bytter man de to om, svarer regsvr32 med en modul-fejl - men `/s` skjuler den, og
-; installeren ville se ud til at lykkes. Registreringen måles derfor som en TILSTAND,
-; aldrig på en exitkode.
+; installeren ville se ud til at lykkes. Ved INSTALLATION afviser RoerFiltre derfor et
+; exit-svar != 0 med Abort; ved afinstallation ignoreres det, så oprydningen ikke blokeres.
 ;
 ; ===========================================================================
 ; FÆLDE B: AUTOSTART-GENVEJEN KAN LANDE HOS DEN FORKERTE BRUGER
@@ -198,6 +198,11 @@ VIAddVersionKey /LANG=0 "FileDescription"  "${NAVN} - installation"
     nsExec::Exec '"$WINDIR\Sysnative\regsvr32.exe" ${Handling}/s "$INSTDIR\HuskWebcamFilter64.dll"'
     Pop $0
     DetailPrint "  64-bit regsvr32 svarede $0"
+    !if "${Handling}" == ""
+      ${If} $0 != 0
+        Abort "Registreringen af 64-bit kamerafilteret fejlede (regsvr32 svarede $0). Husk Webcam ville ikke dukke op som kamera i Windows. Tjek at Smart App Control eller antivirus ikke blokerer HuskWebcamFilter64.dll, og prøv igen."
+      ${EndIf}
+    !endif
   ${Else}
     ; Kan ikke nås: .onInit afviser en 32-bit Windows, fordi appen er x64.
     DetailPrint "  SPRINGER 64-bit over: ikke et 64-bit Windows"
@@ -206,6 +211,11 @@ VIAddVersionKey /LANG=0 "FileDescription"  "${NAVN} - installation"
   nsExec::Exec '"$SYSDIR\regsvr32.exe" ${Handling}/s "$INSTDIR\HuskWebcamFilter32.dll"'
   Pop $0
   DetailPrint "  32-bit regsvr32 svarede $0"
+  !if "${Handling}" == ""
+    ${If} $0 != 0
+      Abort "Registreringen af 32-bit kamerafilteret fejlede (regsvr32 svarede $0). Husk Webcam ville ikke dukke op som kamera i 32-bit programmer. Tjek at Smart App Control eller antivirus ikke blokerer HuskWebcamFilter32.dll, og prøv igen."
+    ${EndIf}
+  !endif
 !macroend
 
 Function un.onInit
